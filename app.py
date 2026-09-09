@@ -2,8 +2,10 @@ import streamlit as st
 import re
 import json
 import os
+import time
+import random
 from datetime import datetime
-from pathlib import Path
+
 
 # ============================================================
 # PAGE CONFIG
@@ -16,8 +18,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+
 # ============================================================
-# OPTIONAL GEMINI IMPORT
+# GEMINI IMPORT
 # ============================================================
 
 try:
@@ -29,10 +32,11 @@ except ImportError:
 
 
 # ============================================================
-# CUSTOM CSS — RED & BLACK THEME
+# CUSTOM CSS — RED + BLACK THEME
 # ============================================================
 
-st.markdown("""
+st.markdown(
+    """
 <style>
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
@@ -41,15 +45,7 @@ html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
-/* ============================================================
-   MAIN BACKGROUND
-   ============================================================ */
-
 .stApp {
-    background: #ffffff;
-}
-
-.main {
     background: #ffffff;
 }
 
@@ -60,7 +56,7 @@ html, body, [class*="css"] {
 }
 
 /* ============================================================
-   SIDEBAR — RED
+   SIDEBAR
    ============================================================ */
 
 section[data-testid="stSidebar"] {
@@ -76,26 +72,13 @@ section[data-testid="stSidebar"] > div {
     background: transparent !important;
 }
 
-/* Sidebar text */
-
 section[data-testid="stSidebar"] * {
     color: #ffffff !important;
 }
 
-/* Sidebar radio buttons */
-
-section[data-testid="stSidebar"] label {
-    color: #ffffff !important;
-    font-weight: 600;
-}
-
-/* Sidebar dividers */
-
 section[data-testid="stSidebar"] hr {
-    border-color: rgba(255,255,255,0.3) !important;
+    border-color: rgba(255,255,255,0.30) !important;
 }
-
-/* Sidebar metrics */
 
 section[data-testid="stSidebar"] [data-testid="stMetricValue"] {
     color: #ffffff !important;
@@ -103,6 +86,18 @@ section[data-testid="stSidebar"] [data-testid="stMetricValue"] {
 
 section[data-testid="stSidebar"] [data-testid="stMetricLabel"] {
     color: #ffe5e5 !important;
+}
+
+/* ============================================================
+   MAIN TEXT
+   ============================================================ */
+
+h1, h2, h3, h4, h5, h6 {
+    color: #111111 !important;
+}
+
+p {
+    color: #222222;
 }
 
 /* ============================================================
@@ -142,26 +137,6 @@ section[data-testid="stSidebar"] [data-testid="stMetricLabel"] {
 }
 
 /* ============================================================
-   MAIN HEADINGS — DARK BLACK
-   ============================================================ */
-
-h1, h2, h3, h4, h5, h6 {
-    color: #111111 !important;
-}
-
-p, span, label, div {
-    color: #222222;
-}
-
-/* Keep sidebar white */
-section[data-testid="stSidebar"] p,
-section[data-testid="stSidebar"] span,
-section[data-testid="stSidebar"] label,
-section[data-testid="stSidebar"] div {
-    color: #ffffff !important;
-}
-
-/* ============================================================
    FEATURE CARDS
    ============================================================ */
 
@@ -193,7 +168,6 @@ section[data-testid="stSidebar"] div {
 
 .feature-card h3 {
     color: #111111 !important;
-    margin-top: 0;
 }
 
 .feature-card p {
@@ -201,64 +175,24 @@ section[data-testid="stSidebar"] div {
 }
 
 /* ============================================================
-   STAT CARDS
-   ============================================================ */
-
-.stat-card {
-    padding: 18px;
-
-    border-radius: 16px;
-
-    background: #ffffff;
-
-    border: 1px solid #eeeeee;
-
-    text-align: center;
-
-    box-shadow:
-        0 5px 20px rgba(0,0,0,0.06);
-}
-
-.stat-number {
-    font-size: 28px;
-    font-weight: 800;
-    color: #b00000 !important;
-}
-
-.stat-label {
-    color: #555555 !important;
-    font-size: 13px;
-}
-
-/* ============================================================
-   BUTTONS — RED
+   BUTTONS
    ============================================================ */
 
 .stButton > button {
     border-radius: 10px;
-
     font-weight: 700;
-
     border: 1px solid #b00000;
-
     background: #d00000;
-
     color: #ffffff !important;
-
     transition: all 0.2s ease;
 }
 
 .stButton > button:hover {
     background: #a80000;
-
     border-color: #8f0000;
-
     color: #ffffff !important;
-
     transform: translateY(-1px);
 }
-
-/* Primary buttons */
 
 .stButton > button[kind="primary"] {
     background: linear-gradient(
@@ -268,7 +202,6 @@ section[data-testid="stSidebar"] div {
     ) !important;
 
     color: #ffffff !important;
-
     border: none !important;
 
     box-shadow:
@@ -290,11 +223,8 @@ section[data-testid="stSidebar"] div {
 .stTextInput input,
 .stTextArea textarea {
     background: #ffffff !important;
-
     color: #111111 !important;
-
     border: 1px solid #cccccc !important;
-
     border-radius: 10px !important;
 }
 
@@ -307,19 +237,47 @@ section[data-testid="stSidebar"] div {
 }
 
 /* ============================================================
-   SELECT BOX
+   SELECTBOX
    ============================================================ */
 
 div[data-baseweb="select"] > div {
     background: #ffffff !important;
-
     color: #111111 !important;
-
     border-color: #cccccc !important;
 }
 
 /* ============================================================
-   CODE BLOCK
+   DOWNLOAD BUTTON
+   ============================================================ */
+
+.stDownloadButton > button {
+    background: #ffffff !important;
+    color: #b00000 !important;
+    border: 2px solid #b00000 !important;
+    border-radius: 10px;
+    font-weight: 700;
+}
+
+.stDownloadButton > button:hover {
+    background: #b00000 !important;
+    color: #ffffff !important;
+}
+
+/* ============================================================
+   EXPANDERS
+   ============================================================ */
+
+[data-testid="stExpander"] {
+    border: 1px solid #eeeeee !important;
+    border-radius: 12px !important;
+}
+
+.streamlit-expanderHeader {
+    color: #111111 !important;
+}
+
+/* ============================================================
+   CODE
    ============================================================ */
 
 pre {
@@ -327,89 +285,13 @@ pre {
 }
 
 /* ============================================================
-   RED HORIZONTAL LINE
+   DIVIDERS
    ============================================================ */
 
 hr {
     border: none !important;
-
     border-top: 2px solid #eeeeee !important;
-
     margin: 25px 0;
-}
-
-/* ============================================================
-   SUCCESS BOX
-   ============================================================ */
-
-.success-box {
-    padding: 15px;
-
-    border-radius: 12px;
-
-    background: #fff3f3;
-
-    border: 1px solid #d00000;
-
-    color: #700000;
-}
-
-/* ============================================================
-   INFO BOX
-   ============================================================ */
-
-.info-box {
-    padding: 15px;
-
-    border-radius: 12px;
-
-    background: #fff5f5;
-
-    border: 1px solid #e00000;
-
-    color: #333333;
-}
-
-/* ============================================================
-   EXPANDERS
-   ============================================================ */
-
-.streamlit-expanderHeader {
-    background: #fff5f5 !important;
-
-    color: #111111 !important;
-
-    border-radius: 10px;
-}
-
-/* ============================================================
-   DOWNLOAD BUTTONS
-   ============================================================ */
-
-.stDownloadButton > button {
-    background: #ffffff !important;
-
-    color: #b00000 !important;
-
-    border: 2px solid #b00000 !important;
-
-    border-radius: 10px;
-
-    font-weight: 700;
-}
-
-.stDownloadButton > button:hover {
-    background: #b00000 !important;
-
-    color: #ffffff !important;
-}
-
-/* ============================================================
-   ALERTS
-   ============================================================ */
-
-[data-testid="stAlert"] {
-    border-radius: 12px;
 }
 
 /* ============================================================
@@ -434,130 +316,54 @@ hr {
 }
 
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
 # SESSION STATE
 # ============================================================
 
-if "history" not in st.session_state:
-    st.session_state.history = []
+defaults = {
+    "history": [],
+    "generated_code": "",
+    "generated_language": "HTML",
+    "generated_filename": "index.html",
+    "explanation": "",
+    "project_files": {},
+    "total_generations": 0,
+    "quick_request": ""
+}
 
-if "generated_code" not in st.session_state:
-    st.session_state.generated_code = ""
-
-if "generated_language" not in st.session_state:
-    st.session_state.generated_language = "HTML"
-
-if "generated_filename" not in st.session_state:
-    st.session_state.generated_filename = "index.html"
-
-if "explanation" not in st.session_state:
-    st.session_state.explanation = ""
-
-if "project_files" not in st.session_state:
-    st.session_state.project_files = {}
-
-if "total_generations" not in st.session_state:
-    st.session_state.total_generations = 0
+for key, value in defaults.items():
+    if key not in st.session_state:
+        st.session_state[key] = value
 
 
 # ============================================================
-# LANGUAGE DATA
+# SUPPORTED LANGUAGES
 # ============================================================
 
 LANGUAGES = {
-    "HTML": {
-        "extension": "html",
-        "comment": "<!-- -->",
-        "type": "web"
-    },
-    "CSS": {
-        "extension": "css",
-        "comment": "/* */",
-        "type": "web"
-    },
-    "JavaScript": {
-        "extension": "js",
-        "comment": "//",
-        "type": "web"
-    },
-    "TypeScript": {
-        "extension": "ts",
-        "comment": "//",
-        "type": "web"
-    },
-    "Python": {
-        "extension": "py",
-        "comment": "#",
-        "type": "general"
-    },
-    "C": {
-        "extension": "c",
-        "comment": "//",
-        "type": "general"
-    },
-    "C++": {
-        "extension": "cpp",
-        "comment": "//",
-        "type": "general"
-    },
-    "C#": {
-        "extension": "cs",
-        "comment": "//",
-        "type": "general"
-    },
-    "Java": {
-        "extension": "java",
-        "comment": "//",
-        "type": "general"
-    },
-    "PHP": {
-        "extension": "php",
-        "comment": "//",
-        "type": "web"
-    },
-    "Ruby": {
-        "extension": "rb",
-        "comment": "#",
-        "type": "general"
-    },
-    "Go": {
-        "extension": "go",
-        "comment": "//",
-        "type": "general"
-    },
-    "Rust": {
-        "extension": "rs",
-        "comment": "//",
-        "type": "general"
-    },
-    "Swift": {
-        "extension": "swift",
-        "comment": "//",
-        "type": "general"
-    },
-    "Kotlin": {
-        "extension": "kt",
-        "comment": "//",
-        "type": "general"
-    },
-    "SQL": {
-        "extension": "sql",
-        "comment": "--",
-        "type": "database"
-    },
-    "Bash": {
-        "extension": "sh",
-        "comment": "#",
-        "type": "shell"
-    },
-    "Dart": {
-        "extension": "dart",
-        "comment": "//",
-        "type": "general"
-    }
+    "HTML": "html",
+    "CSS": "css",
+    "JavaScript": "js",
+    "TypeScript": "ts",
+    "Python": "py",
+    "C": "c",
+    "C++": "cpp",
+    "C#": "cs",
+    "Java": "java",
+    "PHP": "php",
+    "Ruby": "rb",
+    "Go": "go",
+    "Rust": "rs",
+    "Swift": "swift",
+    "Kotlin": "kt",
+    "SQL": "sql",
+    "Bash": "sh",
+    "Dart": "dart"
 }
 
 
@@ -580,25 +386,41 @@ USER_LANGUAGES = [
 ]
 
 
+FRAMEWORKS = [
+    "None",
+    "Streamlit",
+    "React",
+    "Next.js",
+    "Flask",
+    "Django",
+    "FastAPI",
+    "Node.js",
+    "Express.js",
+    "Bootstrap",
+    "Tailwind CSS",
+    "Pygame"
+]
+
+
 # ============================================================
 # API KEY
 # ============================================================
 
 def get_api_key():
 
-    # Streamlit Cloud secrets
+    # Streamlit Cloud Secrets
     try:
         if "GEMINI_API_KEY" in st.secrets:
             return st.secrets["GEMINI_API_KEY"]
     except Exception:
         pass
 
-    # Local environment
+    # Windows / local environment
     return os.getenv("GEMINI_API_KEY", "")
 
 
 # ============================================================
-# CLEAN AI RESPONSE
+# CLEAN GENERATED CODE
 # ============================================================
 
 def clean_code(text):
@@ -608,9 +430,8 @@ def clean_code(text):
 
     text = text.strip()
 
-    # Remove markdown fences
     text = re.sub(
-        r"^```[a-zA-Z0-9_+\-#]*\s*",
+        r"^```[a-zA-Z0-9_+#\-]*\s*",
         "",
         text
     )
@@ -625,21 +446,118 @@ def clean_code(text):
 
 
 # ============================================================
-# FILE EXTENSION
+# FILENAME
 # ============================================================
 
 def get_filename(language):
 
-    data = LANGUAGES.get(language)
+    extension = LANGUAGES.get(language, "txt")
 
-    if not data:
-        return "generated_code.txt"
+    if language == "HTML":
+        return "index.html"
 
-    return f"generated_code.{data['extension']}"
+    if language == "CSS":
+        return "style.css"
+
+    if language == "JavaScript":
+        return "script.js"
+
+    if language == "TypeScript":
+        return "script.ts"
+
+    return f"generated_code.{extension}"
 
 
 # ============================================================
-# AI GENERATOR
+# GEMINI REQUEST WITH RETRY + FALLBACK
+# ============================================================
+
+def call_gemini(
+    prompt,
+    temperature=0.6,
+    max_output_tokens=12000
+):
+
+    api_key = get_api_key()
+
+    if not api_key:
+        return None, "API_KEY_MISSING"
+
+    if not GEMINI_AVAILABLE:
+        return None, "GEMINI_PACKAGE_MISSING"
+
+    try:
+        client = genai.Client(api_key=api_key)
+    except Exception as e:
+        return None, f"CLIENT_ERROR: {e}"
+
+    # Primary model first, fallback second
+    models = [
+        "gemini-3-flash-preview",
+    
+    ]
+
+    last_error = None
+
+    for model in models:
+
+        for attempt in range(4):
+
+            try:
+
+                response = client.models.generate_content(
+                    model=model,
+                    contents=prompt,
+                    config=types.GenerateContentConfig(
+                        temperature=temperature,
+                        max_output_tokens=max_output_tokens
+                    )
+                )
+
+                if response and response.text:
+
+                    return response.text, None
+
+                last_error = "EMPTY_RESPONSE"
+
+            except Exception as e:
+
+                error_text = str(e)
+                last_error = error_text
+
+                temporary_error = any(
+                    x in error_text.upper()
+                    for x in [
+                        "503",
+                        "UNAVAILABLE",
+                        "429",
+                        "RESOURCE_EXHAUSTED",
+                        "500",
+                        "INTERNAL"
+                    ]
+                )
+
+                if temporary_error:
+
+                    # Exponential backoff:
+                    # approximately 2, 4, 8, 16 seconds
+                    wait_time = (
+                        2 ** attempt
+                        + random.uniform(0.5, 1.5)
+                    )
+
+                    time.sleep(wait_time)
+
+                    continue
+
+                # Don't retry permanent errors
+                break
+
+    return None, last_error
+
+
+# ============================================================
+# GENERATE CODE
 # ============================================================
 
 def generate_code(
@@ -652,33 +570,21 @@ def generate_code(
     creativity
 ):
 
-    api_key = get_api_key()
+    comment_instruction = (
+        "Include useful comments."
+        if include_comments
+        else "Use minimal comments."
+    )
 
-    if not api_key:
-        return None, "API_KEY_MISSING"
+    framework_instruction = (
+        framework
+        if framework != "None"
+        else "No external framework is required."
+    )
 
-    if not GEMINI_AVAILABLE:
-        return None, "GEMINI_PACKAGE_MISSING"
-
-    try:
-
-        client = genai.Client(api_key=api_key)
-
-        comment_instruction = (
-            "Include helpful comments."
-            if include_comments
-            else "Keep comments minimal."
-        )
-
-        framework_instruction = (
-            framework
-            if framework != "None"
-            else "Do not require an external framework unless absolutely necessary."
-        )
-
-        prompt = f"""
-You are CodeForge AI, an expert software engineer and multilingual
-programming assistant.
+    prompt = f"""
+You are CodeForge AI, an expert software engineer,
+programming teacher and multilingual coding assistant.
 
 USER REQUEST:
 {request}
@@ -686,13 +592,13 @@ USER REQUEST:
 PROGRAMMING LANGUAGE:
 {language}
 
-USER'S NATURAL LANGUAGE:
+USER LANGUAGE:
 {response_language}
 
-COMPLEXITY:
+CODE LEVEL:
 {complexity}
 
-FRAMEWORK / TECHNOLOGY:
+FRAMEWORK:
 {framework_instruction}
 
 COMMENTS:
@@ -701,128 +607,99 @@ COMMENTS:
 CREATIVITY:
 {creativity}
 
-TASK:
+Your task is to create complete, functional,
+high-quality and runnable code.
 
-Create production-quality, complete, runnable code that directly solves
-the user's request.
-
-Important rules:
+IMPORTANT RULES:
 
 1. Return ONLY the source code.
-2. Do NOT wrap the answer in markdown code fences.
-3. Do NOT write explanations before or after the code.
-4. Do not leave TODO placeholders.
-5. Make the application functional.
-6. Handle reasonable errors.
+2. Do NOT use markdown code fences.
+3. Do NOT add an explanation before the code.
+4. Do NOT add an explanation after the code.
+5. Do NOT leave TODO placeholders.
+6. Make the program actually functional.
 7. Use modern best practices.
-8. If the requested language is HTML, create a complete HTML document.
-9. If HTML is requested, CSS and JavaScript may be embedded inside the
-   same HTML file when useful.
-10. Make UI projects visually polished and responsive.
-11. Respect the user's requested language for comments/text where possible.
-12. Never expose API keys, passwords, tokens, or secrets.
-13. If the user asks for a game, make it actually playable.
-14. If the user asks for a website, make it interactive where appropriate.
-15. Prefer self-contained code when possible.
+8. Handle reasonable errors.
+9. Never expose API keys, passwords or secrets.
+10. If HTML is requested, create a complete HTML document.
+11. HTML projects may include CSS and JavaScript in the same file.
+12. If the user asks for a game, make it playable.
+13. If the user asks for a website, make it responsive.
+14. If the user asks for a UI, make it visually polished.
+15. Respect the requested programming language.
+16. Use the user's natural language for visible UI text when appropriate.
+
+Generate the final code now.
 """
 
-        temperature = float(creativity)
-
-        response = client.models.generate_content(
-            model="gemini-3-flash-preview",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=temperature,
-                max_output_tokens=12000
-            )
-        )
-
-        code = clean_code(response.text)
-
-        if not code:
-            return None, "EMPTY_RESPONSE"
-
-        return code, None
-
-    except Exception as e:
-        return None, str(e)
+    return call_gemini(
+        prompt,
+        temperature=float(creativity),
+        max_output_tokens=12000
+    )
 
 
 # ============================================================
-# EXPLANATION
+# EXPLAIN CODE
 # ============================================================
 
-def explain_code(code, language, response_language):
+def explain_code(
+    code,
+    language,
+    response_language
+):
 
-    api_key = get_api_key()
+    prompt = f"""
+You are an expert programming teacher.
 
-    if not api_key or not GEMINI_AVAILABLE:
-        return "AI explanation requires a configured Gemini API key."
-
-    try:
-
-        client = genai.Client(api_key=api_key)
-
-        prompt = f"""
-Explain the following {language} code clearly.
+Explain this {language} code.
 
 Respond in {response_language}.
 
-Cover:
+Explain:
 
 1. What the program does
 2. Main components
-3. Important functions
-4. How the code works
-5. Important concepts used
-6. How the user can customize it
-7. Any dependencies
-8. Potential improvements
+3. Important variables
+4. Important functions
+5. How the program works
+6. Important programming concepts
+7. How the user can customize it
+8. Dependencies
+9. Possible improvements
 
-Keep the explanation educational and easy to understand.
+Keep the explanation clear and educational.
 
 CODE:
 
 {code}
 """
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.3,
-                max_output_tokens=5000
-            )
-        )
-
-        return response.text
-
-    except Exception as e:
-        return f"Could not generate explanation: {e}"
+    return call_gemini(
+        prompt,
+        temperature=0.3,
+        max_output_tokens=5000
+    )
 
 
 # ============================================================
 # DEBUG CODE
 # ============================================================
 
-def debug_code(code, language, error_message, response_language):
+def debug_code(
+    code,
+    language,
+    error_message,
+    response_language
+):
 
-    api_key = get_api_key()
+    prompt = f"""
+You are an expert software debugger.
 
-    if not api_key or not GEMINI_AVAILABLE:
-        return None
-
-    try:
-
-        client = genai.Client(api_key=api_key)
-
-        prompt = f"""
-You are an expert debugging assistant.
-
-Programming language:
+PROGRAMMING LANGUAGE:
 {language}
 
-User language:
+USER LANGUAGE:
 {response_language}
 
 ERROR:
@@ -831,89 +708,115 @@ ERROR:
 CODE:
 {code}
 
-Fix the code.
+Find and fix the problems.
 
-Return ONLY the complete corrected code.
-Do not use markdown fences.
-Do not provide explanations.
+Return ONLY the complete corrected source code.
+
+Rules:
+
+1. No markdown fences.
+2. No explanation.
+3. No TODO placeholders.
+4. Preserve the original purpose.
+5. Improve error handling where useful.
+6. Return complete runnable code.
 """
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.2,
-                max_output_tokens=12000
-            )
-        )
-
-        return clean_code(response.text)
-
-    except Exception:
-        return None
+    return call_gemini(
+        prompt,
+        temperature=0.2,
+        max_output_tokens=12000
+    )
 
 
 # ============================================================
-# PROJECT GENERATOR
+# MULTI-FILE PROJECT
 # ============================================================
 
-def generate_project(request, response_language):
+def generate_project(
+    request,
+    response_language
+):
 
-    api_key = get_api_key()
+    prompt = f"""
+You are a senior full-stack developer.
 
-    if not api_key or not GEMINI_AVAILABLE:
-        return {}
+Create a complete multi-file project.
 
-    try:
-
-        client = genai.Client(api_key=api_key)
-
-        prompt = f"""
-Create a complete multi-file software project.
-
-User request:
+USER REQUEST:
 {request}
 
-Response language:
+USER LANGUAGE:
 {response_language}
 
-Return ONLY valid JSON in this structure:
+Return ONLY valid JSON.
+
+Required format:
 
 {{
     "files": {{
-        "index.html": "file content",
-        "style.css": "file content",
-        "script.js": "file content"
+        "filename.ext": "complete file content",
+        "another.ext": "complete file content"
     }}
 }}
 
 Rules:
-- Only include files actually required.
-- No markdown.
-- No explanation.
-- Escape JSON correctly.
-- Make every file complete and functional.
+
+1. Return valid JSON only.
+2. Do not use markdown.
+3. Do not include explanations.
+4. Include only necessary files.
+5. Every file must be complete.
+6. Make the project functional.
+7. Escape JSON characters correctly.
+8. Never include API keys or secrets.
+9. Use modern coding practices.
 """
 
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                temperature=0.7,
-                max_output_tokens=16000
-            )
+    result, error = call_gemini(
+        prompt,
+        temperature=0.7,
+        max_output_tokens=16000
+    )
+
+    if error:
+        return {}, error
+
+    try:
+
+        raw = result.strip()
+
+        raw = re.sub(
+            r"^```json\s*",
+            "",
+            raw,
+            flags=re.IGNORECASE
         )
 
-        raw = response.text.strip()
+        raw = re.sub(
+            r"^```\s*",
+            "",
+            raw
+        )
 
-        raw = re.sub(r"^```json", "", raw)
-        raw = re.sub(r"^```", "", raw)
-        raw = re.sub(r"```$", "", raw)
+        raw = re.sub(
+            r"\s*```$",
+            "",
+            raw
+        )
 
-        return json.loads(raw.strip()).get("files", {})
+        data = json.loads(raw)
 
-    except Exception:
-        return {}
+        files = data.get("files", {})
+
+        if isinstance(files, dict):
+            return files, None
+
+        return {}, "Invalid project structure."
+
+    except Exception as e:
+
+        return {}, f"PROJECT_JSON_ERROR: {e}"
 
 
 # ============================================================
@@ -957,10 +860,10 @@ with st.sidebar:
 
     creativity = st.slider(
         "Creativity",
-        0.0,
-        1.0,
-        0.65,
-        0.05
+        min_value=0.0,
+        max_value=1.0,
+        value=0.65,
+        step=0.05
     )
 
     include_comments = st.checkbox(
@@ -985,29 +888,32 @@ with st.sidebar:
     st.divider()
 
     st.caption("CodeForge AI Studio")
-    st.caption("Built with Python + Streamlit + Gemini")
+    st.caption("Python • Streamlit • Gemini")
 
 
 # ============================================================
 # HERO
 # ============================================================
 
-st.markdown("""
+st.markdown(
+    """
 <div class="hero">
 
 <h1>⚡ CodeForge AI Studio</h1>
 
 <p>
 Turn your ideas into real computer programs using natural language.
-Ask in English, Urdu, Hindi or many other languages.
+Ask in English, Urdu, Hindi, Arabic, Spanish and many other languages.
 </p>
 
 </div>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True
+)
 
 
 # ============================================================
-# GENERATOR
+# GENERATOR PAGE
 # ============================================================
 
 if page == "🏠 Generator":
@@ -1015,28 +921,55 @@ if page == "🏠 Generator":
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.markdown("""
-        <div class="feature-card">
-        <h3>🤖 AI Generation</h3>
-        <p>Describe your idea and receive complete runnable code.</p>
-        </div>
-        """, unsafe_allow_html=True)
+
+        st.markdown(
+            """
+<div class="feature-card">
+
+<h3>🤖 AI Generation</h3>
+
+<p>
+Describe your idea and receive complete runnable code.
+</p>
+
+</div>
+""",
+            unsafe_allow_html=True
+        )
 
     with col2:
-        st.markdown("""
-        <div class="feature-card">
-        <h3>🌍 Multilingual</h3>
-        <p>Write your request in English, Urdu, Hindi and more.</p>
-        </div>
-        """, unsafe_allow_html=True)
+
+        st.markdown(
+            """
+<div class="feature-card">
+
+<h3>🌍 Multilingual</h3>
+
+<p>
+Write your request in English, Urdu, Hindi and more.
+</p>
+
+</div>
+""",
+            unsafe_allow_html=True
+        )
 
     with col3:
-        st.markdown("""
-        <div class="feature-card">
-        <h3>🚀 Any Project</h3>
-        <p>Games, websites, tools, automation, apps and more.</p>
-        </div>
-        """, unsafe_allow_html=True)
+
+        st.markdown(
+            """
+<div class="feature-card">
+
+<h3>🚀 Any Project</h3>
+
+<p>
+Create games, websites, tools, dashboards and applications.
+</p>
+
+</div>
+""",
+            unsafe_allow_html=True
+        )
 
     st.markdown("## ✨ Create Something")
 
@@ -1046,12 +979,13 @@ if page == "🏠 Generator":
 
         request = st.text_area(
             "Describe what you want to build",
+            value=st.session_state.quick_request,
             height=190,
             placeholder=(
-                "Example:\n"
+                "Example:\n\n"
                 "Create a 2D space shooting game with a spaceship, "
                 "enemies, score, health system and keyboard controls. "
-                "Make it in HTML, CSS and JavaScript."
+                "Make it in HTML."
             )
         )
 
@@ -1059,72 +993,54 @@ if page == "🏠 Generator":
 
         language = st.selectbox(
             "Programming language",
-            list(LANGUAGES.keys()),
-            index=0
+            list(LANGUAGES.keys())
         )
 
         response_language = st.selectbox(
             "Your language",
-            USER_LANGUAGES,
-            index=0
+            USER_LANGUAGES
         )
-
-        framework_options = [
-            "None",
-            "Streamlit",
-            "React",
-            "Next.js",
-            "Flask",
-            "Django",
-            "FastAPI",
-            "Node.js",
-            "Express.js",
-            "Bootstrap",
-            "Tailwind CSS",
-            "Pygame"
-        ]
 
         framework = st.selectbox(
             "Framework / technology",
-            framework_options
+            FRAMEWORKS
         )
 
     st.markdown("### 💡 Quick Ideas")
 
     ideas = [
-        "🎮 Create a browser game",
-        "🌐 Create a modern portfolio",
-        "🧮 Create a calculator",
-        "🤖 Create an AI chatbot",
-        "📊 Create a dashboard",
-        "🔐 Create a login page"
+        ("🎮", "Browser Game"),
+        ("🌐", "Portfolio"),
+        ("🧮", "Calculator"),
+        ("🤖", "Chatbot"),
+        ("📊", "Dashboard"),
+        ("🔐", "Login Page")
     ]
 
-    idea_cols = st.columns(6)
+    idea_columns = st.columns(6)
 
-    for i, idea in enumerate(ideas):
+    quick_requests = [
+        "Create a playable browser game using HTML, CSS and JavaScript.",
+        "Create a modern responsive developer portfolio website.",
+        "Create a beautiful scientific calculator.",
+        "Create a modern chatbot interface.",
+        "Create a modern analytics dashboard.",
+        "Create a modern responsive login page."
+    ]
 
-        with idea_cols[i]:
+    for i, (icon, name) in enumerate(ideas):
+
+        with idea_columns[i]:
 
             if st.button(
-                idea,
+                f"{icon} {name}",
                 use_container_width=True,
-                key=f"idea_{i}"
+                key=f"quick_{i}"
             ):
 
-                idea_requests = {
-                    0: "Create a playable browser game using HTML, CSS and JavaScript.",
-                    1: "Create a modern responsive developer portfolio website.",
-                    2: "Create a beautiful scientific calculator.",
-                    3: "Create a chatbot interface.",
-                    4: "Create a modern analytics dashboard.",
-                    5: "Create a modern responsive login page."
-                }
+                st.session_state.quick_request = quick_requests[i]
 
-                st.session_state.quick_request = idea_requests[i]
-
-    if "quick_request" in st.session_state:
-        request = st.session_state.quick_request
+                st.rerun()
 
     st.markdown("")
 
@@ -1138,13 +1054,17 @@ if page == "🏠 Generator":
 
         if not request.strip():
 
-            st.warning("Please describe what you want to build.")
+            st.warning(
+                "Please describe what you want to build."
+            )
 
         else:
 
-            with st.spinner("🧠 CodeForge is writing your code..."):
+            with st.spinner(
+                "🧠 CodeForge is generating your code..."
+            ):
 
-                code, error = generate_code(
+                result, error = generate_code(
                     request=request,
                     language=language,
                     response_language=response_language,
@@ -1159,30 +1079,79 @@ if page == "🏠 Generator":
                 if error == "API_KEY_MISSING":
 
                     st.error(
-                        "Gemini API key not found. Add GEMINI_API_KEY "
-                        "to Streamlit Secrets or your environment."
+                        "❌ GEMINI_API_KEY was not found."
+                    )
+
+                    st.info(
+                        "Add GEMINI_API_KEY to Streamlit Secrets "
+                        "or your Windows environment variables."
                     )
 
                 elif error == "GEMINI_PACKAGE_MISSING":
 
                     st.error(
-                        "Gemini package is missing. Install "
-                        "`google-genai`."
+                        "❌ google-genai is not installed."
+                    )
+
+                    st.code(
+                        "pip install -U google-genai"
+                    )
+
+                elif (
+                    "503" in str(error)
+                    or "UNAVAILABLE" in str(error).upper()
+                ):
+
+                    st.error(
+                        "⚠️ Gemini is currently experiencing "
+                        "high demand."
+                    )
+
+                    st.info(
+                        "CodeForge already attempted automatic retries "
+                        "and a fallback model. Please wait a little "
+                        "and try again."
+                    )
+
+                elif (
+                    "429" in str(error)
+                    or "RESOURCE_EXHAUSTED" in str(error).upper()
+                ):
+
+                    st.error(
+                        "⚠️ API rate limit reached."
+                    )
+
+                    st.info(
+                        "Please wait before making another request."
                     )
 
                 else:
 
-                    st.error(f"Generation failed: {error}")
+                    st.error(
+                        f"❌ Generation failed:\n\n{error}"
+                    )
 
             else:
 
+                code = clean_code(result)
+
                 st.session_state.generated_code = code
+
                 st.session_state.generated_language = language
-                st.session_state.generated_filename = get_filename(language)
+
+                st.session_state.generated_filename = (
+                    get_filename(language)
+                )
+
+                st.session_state.explanation = ""
+
                 st.session_state.total_generations += 1
 
                 history_item = {
-                    "time": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "time": datetime.now().strftime(
+                        "%Y-%m-%d %H:%M"
+                    ),
                     "request": request,
                     "language": language,
                     "code": code
@@ -1197,7 +1166,13 @@ if page == "🏠 Generator":
                     st.session_state.history[:20]
                 )
 
-                st.success("✅ Code generated successfully!")
+                st.success(
+                    "✅ Code generated successfully!"
+                )
+
+    # ========================================================
+    # GENERATED CODE
+    # ========================================================
 
     if st.session_state.generated_code:
 
@@ -1206,7 +1181,10 @@ if page == "🏠 Generator":
         st.markdown("## 💻 Generated Code")
 
         code = st.session_state.generated_code
-        current_language = st.session_state.generated_language
+
+        current_language = (
+            st.session_state.generated_language
+        )
 
         st.code(
             code,
@@ -1232,12 +1210,28 @@ if page == "🏠 Generator":
                 use_container_width=True
             ):
 
-                with st.spinner("Explaining..."):
+                with st.spinner(
+                    "🧠 Creating explanation..."
+                ):
 
-                    st.session_state.explanation = explain_code(
-                        code,
-                        current_language,
-                        response_language
+                    explanation, explanation_error = (
+                        explain_code(
+                            code,
+                            current_language,
+                            response_language
+                        )
+                    )
+
+                if explanation_error:
+
+                    st.error(
+                        f"Explanation failed: {explanation_error}"
+                    )
+
+                else:
+
+                    st.session_state.explanation = (
+                        explanation
                     )
 
         if st.session_state.explanation:
@@ -1258,8 +1252,8 @@ elif page == "🛠️ Debugger":
     st.markdown("## 🛠️ AI Code Debugger")
 
     st.write(
-        "Paste broken code and the error message. "
-        "CodeForge will try to repair it."
+        "Paste your code and error message. "
+        "CodeForge will analyze and repair it."
     )
 
     debug_language = st.selectbox(
@@ -1280,8 +1274,8 @@ elif page == "🛠️ Debugger":
         placeholder="Paste the error message here..."
     )
 
-    debug_language_response = st.selectbox(
-        "Explanation language",
+    debug_response_language = st.selectbox(
+        "Response language",
         USER_LANGUAGES,
         key="debug_response_language"
     )
@@ -1294,40 +1288,51 @@ elif page == "🛠️ Debugger":
 
         if not debug_code_input.strip():
 
-            st.warning("Paste some code first.")
+            st.warning(
+                "Please paste your code first."
+            )
 
         else:
 
-            with st.spinner("🔎 Analyzing code..."):
+            with st.spinner(
+                "🔎 Analyzing and fixing your code..."
+            ):
 
-                fixed = debug_code(
+                fixed, error = debug_code(
                     debug_code_input,
                     debug_language,
                     error_message,
-                    debug_language_response
+                    debug_response_language
                 )
 
-            if fixed:
+            if error:
 
-                st.success("✅ A corrected version was generated.")
+                st.error(
+                    f"❌ Debugging failed:\n\n{error}"
+                )
+
+            else:
+
+                fixed_code = clean_code(fixed)
+
+                st.success(
+                    "✅ Corrected code generated!"
+                )
 
                 st.code(
-                    fixed,
+                    fixed_code,
                     language=debug_language.lower()
                 )
 
                 st.download_button(
                     "📥 Download Fixed Code",
-                    fixed,
-                    file_name=f"fixed.{LANGUAGES[debug_language]['extension']}",
+                    fixed_code,
+                    file_name=(
+                        f"fixed."
+                        f"{LANGUAGES[debug_language]}"
+                    ),
                     mime="text/plain",
                     use_container_width=True
-                )
-
-            else:
-
-                st.error(
-                    "Could not debug the code. Check your API configuration."
                 )
 
 
@@ -1340,30 +1345,42 @@ elif page == "👁️ Preview":
     st.markdown("## 👁️ Live HTML Preview")
 
     st.info(
-        "This preview works with generated HTML. "
+        "This preview is intended for HTML projects. "
         "Only preview code you trust."
     )
 
-    html_code = st.session_state.generated_code
+    if st.session_state.generated_code:
 
-    if not html_code:
+        if (
+            st.session_state.generated_language
+            == "HTML"
+        ):
+
+            html_code = st.session_state.generated_code
+
+        else:
+
+            html_code = st.text_area(
+                "Paste HTML",
+                height=350
+            )
+
+    else:
 
         html_code = st.text_area(
             "Paste HTML",
             height=400,
-            placeholder="Paste your HTML here..."
+            placeholder=(
+                "<!DOCTYPE html>\n"
+                "<html>\n"
+                "<body>\n"
+                "...\n"
+                "</body>\n"
+                "</html>"
+            )
         )
 
-    else:
-
-        st.text_area(
-            "Current HTML",
-            value=html_code,
-            height=250,
-            key="preview_source"
-        )
-
-    if html_code:
+    if html_code.strip():
 
         st.markdown("### 🌐 Preview")
 
@@ -1383,16 +1400,17 @@ elif page == "📁 Project Builder":
     st.markdown("## 📁 AI Multi-File Project Builder")
 
     st.write(
-        "Describe a complete project and CodeForge can generate "
-        "multiple files."
+        "Describe a complete project and CodeForge will "
+        "generate the required files."
     )
 
     project_request = st.text_area(
         "Describe your project",
         height=180,
         placeholder=(
-            "Example: Create a modern portfolio website with "
-            "home, about, projects and contact sections."
+            "Example:\n"
+            "Create a modern portfolio website with "
+            "Home, About, Projects and Contact sections."
         )
     )
 
@@ -1410,39 +1428,47 @@ elif page == "📁 Project Builder":
 
         if not project_request.strip():
 
-            st.warning("Describe your project first.")
+            st.warning(
+                "Please describe your project first."
+            )
 
         else:
 
-            with st.spinner("🏗️ Building project files..."):
+            with st.spinner(
+                "🏗️ Building project files..."
+            ):
 
-                files = generate_project(
+                files, error = generate_project(
                     project_request,
                     project_language
                 )
 
-            if files:
+            if error:
 
-                st.session_state.project_files = files
-
-                st.success(
-                    f"Created {len(files)} project files."
+                st.error(
+                    f"❌ Project generation failed:\n\n{error}"
                 )
 
             else:
 
-                st.error(
-                    "Project generation failed. "
-                    "Check your Gemini API key."
+                st.session_state.project_files = files
+
+                st.success(
+                    f"✅ Created {len(files)} project files!"
                 )
 
     if st.session_state.project_files:
 
         st.markdown("### 📦 Generated Files")
 
-        for filename, content in st.session_state.project_files.items():
+        for filename, content in (
+            st.session_state.project_files.items()
+        ):
 
-            with st.expander(f"📄 {filename}", expanded=True):
+            with st.expander(
+                f"📄 {filename}",
+                expanded=True
+            ):
 
                 st.code(
                     content,
@@ -1455,10 +1481,10 @@ elif page == "📁 Project Builder":
 
                 st.download_button(
                     f"📥 Download {filename}",
-                    content,
+                    data=content,
                     file_name=filename,
                     mime="text/plain",
-                    key=f"download_{filename}"
+                    key=f"file_{filename}"
                 )
 
 
@@ -1491,12 +1517,20 @@ elif page == "📚 History":
             st.session_state.history
         ):
 
+            short_request = (
+                item["request"][:70]
+                .replace("\n", " ")
+            )
+
             with st.expander(
-                f"{index + 1}. {item['language']} — "
-                f"{item['request'][:70]}..."
+                f"{index + 1}. "
+                f"{item['language']} — "
+                f"{short_request}"
             ):
 
-                st.caption(item["time"])
+                st.caption(
+                    item["time"]
+                )
 
                 st.write(
                     item["request"]
@@ -1509,10 +1543,12 @@ elif page == "📚 History":
 
                 if st.button(
                     "Load Code",
-                    key=f"load_{index}"
+                    key=f"load_history_{index}"
                 ):
 
-                    st.session_state.generated_code = item["code"]
+                    st.session_state.generated_code = (
+                        item["code"]
+                    )
 
                     st.session_state.generated_language = (
                         item["language"]
@@ -1522,7 +1558,9 @@ elif page == "📚 History":
                         get_filename(item["language"])
                     )
 
-                    st.success("Loaded into workspace.")
+                    st.success(
+                        "✅ Code loaded into the workspace."
+                    )
 
 
 # ============================================================
@@ -1533,49 +1571,58 @@ elif page == "ℹ️ About":
 
     st.markdown("## ⚡ About CodeForge AI Studio")
 
-    st.markdown("""
-    **CodeForge AI Studio** is an AI-powered multilingual programming
-    assistant built with Python and Streamlit.
+    st.markdown(
+        """
+### 🚀 What is CodeForge?
 
-    ### 🎯 What can it do?
+CodeForge AI Studio is a multilingual AI programming
+assistant that converts natural-language ideas into
+working computer code.
 
-    - Generate computer programs from natural language
-    - Generate websites
-    - Create browser games
-    - Generate Python applications
-    - Explain existing code
-    - Debug code
-    - Build multi-file projects
-    - Preview HTML
-    - Download generated files
+### 🌍 Languages
 
-    ### 🌍 Natural-language support
+Users can communicate with CodeForge in:
 
-    You can communicate with the AI in many languages, including:
+**English • Urdu • Hindi • Arabic • Spanish • French •
+German • Chinese • Japanese • Korean • Turkish •
+Portuguese • Bengali • Punjabi • Persian**
 
-    **English • Urdu • Hindi • Arabic • Spanish • French • German •
-    Chinese • Japanese • Korean • Turkish • Bengali • Punjabi**
+### 💻 Programming
 
-    ### 💻 Programming languages
+CodeForge supports:
 
-    CodeForge supports many popular programming languages such as:
+**Python • HTML • CSS • JavaScript • TypeScript • C •
+C++ • C# • Java • PHP • Ruby • Go • Rust • Swift •
+Kotlin • SQL • Bash • Dart**
 
-    **Python • HTML • CSS • JavaScript • TypeScript • C • C++ • C# •
-    Java • PHP • Ruby • Go • Rust • Swift • Kotlin • SQL • Bash • Dart**
+### 🧰 Tools
 
-    ### 🧠 Technology
+- 🤖 AI Code Generator
+- 🐛 AI Debugger
+- 🧠 Code Explanation
+- 📁 Multi-file Project Builder
+- 👁️ HTML Preview
+- 📥 Code Downloads
+- 📚 Generation History
 
-    - Python
-    - Streamlit
-    - Google Gemini
-    - HTML
-    - CSS
-    - JavaScript
+### 🛠️ Technology
 
-    """)
+**Python + Streamlit + Google Gemini**
+
+### 🎯 Mission
+
+Make programming easier by allowing people to explain
+their ideas naturally instead of having to know every
+programming syntax before they start.
+
+---
+
+## ⚡ Describe it. Generate it. Build it.
+"""
+    )
 
     st.markdown("---")
 
-    st.markdown(
-        "### 🚀 Turn an idea into code."
+    st.success(
+        "CodeForge AI Studio is ready to turn ideas into code."
     )

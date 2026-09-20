@@ -10,7 +10,6 @@ It allows users to describe what they want to build in natural language and gene
 
 **Streamlit App:**
 `https://codeforge-ai-studio-ij6nyvexybgmjfza4fyqui.streamlit.app/'
-Replace the placeholder above with your deployed Streamlit URL.
 
 ---
 
